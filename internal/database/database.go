@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"fut-todos-cms/internal/server/models"
 	"log"
 	"os"
 	"strconv"
@@ -22,6 +23,12 @@ type Service interface {
 	// Close terminates the database connection.
 	// It returns an error if the connection cannot be closed.
 	Close() error
+
+	GetUsers() ([]models.User, error)
+	InsertUser(u models.User) (sql.Result, error)
+	GetPosts() ([]models.Post, error)
+	InsertPost(p models.Post) (sql.Result, error)
+	GetUserByEmail(email string) (models.User, error)
 }
 
 type service struct {
@@ -112,4 +119,97 @@ func (s *service) Health() map[string]string {
 func (s *service) Close() error {
 	log.Printf("Disconnected from database: %s", database)
 	return s.db.Close()
+}
+
+func (s *service) InsertPost(p models.Post) (sql.Result, error) {
+	result, err := s.db.Exec(`
+    INSERT INTO posts 
+    (title, content, user_id, created_at, updated_at)
+    VALUES ($1, $2, $3, $4, $5)`,
+		p.Title, p.Content, p.AuthorID, time.Now(), time.Now())
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (s *service) GetPosts() ([]models.Post, error) {
+	rows, err := s.db.Query(`SELECT * FROM posts`)
+	if err != nil {
+		return nil, err
+	}
+
+	posts := []models.Post{}
+
+	for rows.Next() {
+		var post models.Post
+		err := rows.Scan(
+			&post.ID,
+			&post.Title,
+			&post.Content,
+			&post.AuthorID,
+			&post.CreatedAt,
+			&post.UpdatedAt,
+		)
+		if err != nil {
+			log.Printf("Error scanning player: %e\n", err)
+			continue
+		}
+
+		posts = append(posts, post)
+	}
+
+	return posts, nil
+}
+
+func (s *service) GetUsers() ([]models.User, error) {
+	rows, err := s.db.Query(`SELECT * FROM users`)
+	if err != nil {
+		return nil, err
+	}
+
+	users := []models.User{}
+
+	for rows.Next() {
+    var user models.User
+		err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
+		if err != nil {
+			log.Printf("Error scanning player: %e\n", err)
+			continue
+		}
+		users = append(users, user)
+	}
+	return users, nil
+}
+
+func (s *service) InsertUser(u models.User) (sql.Result, error) {
+	result, err := s.db.Exec(`
+    INSERT INTO users 
+    (name, email, password, created_at, updated_at)
+    VALUES ($1, $2, $3, $4, $5)`,
+		u.Name, u.Email, u.Password, time.Now(), time.Now())
+	if err != nil {
+		log.Printf("Error inserting user: %e\n", err)
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (s *service) GetUserByEmail(email string) (models.User, error) {
+	var user models.User
+	err := s.db.QueryRow(`SELECT * FROM users WHERE email = $1`, email).Scan(
+		&user.ID,
+		&user.Name,
+		&user.Email,
+    &user.Password,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	return user, nil
 }

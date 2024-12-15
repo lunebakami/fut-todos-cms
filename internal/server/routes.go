@@ -5,10 +5,17 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+
+	"fut-todos-cms/internal/server/controllers"
 )
 
 func (s *Server) RegisterRoutes() http.Handler {
 	e := echo.New()
+
+  authController := controllers.NewAuthController(s.db)
+  postController := controllers.NewPostController(s.db)
+  userController := controllers.NewUserController(s.db)
+
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
@@ -16,6 +23,13 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	e.GET("/health", s.healthHandler)
 
+	e.GET("/posts", postController.GetPosts)
+  e.POST("/posts", postController.CreatePost)
+
+  e.GET("/users", userController.GetUsers)
+  e.POST("/users", userController.CreateUser)
+
+  e.POST("/auth/signin", authController.SignIn)
 	return e
 }
 
