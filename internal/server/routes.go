@@ -23,13 +23,13 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	e.GET("/health", s.healthHandler)
 
+  e.POST("/auth/signin", authController.SignIn)
+
 	e.GET("/posts", postController.GetPosts)
   e.POST("/posts", postController.CreatePost)
 
   e.GET("/users", userController.GetUsers)
   e.POST("/users", userController.CreateUser)
-
-  e.POST("/auth/signin", authController.SignIn)
 	return e
 }
 

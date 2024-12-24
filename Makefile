@@ -9,6 +9,19 @@ build:
 	
 	@go build -o main cmd/api/main.go
 
+migrate-up:
+	@if command -v goose > /dev/null; then \
+	 	goose -dir=./migrations postgres postgres://postgres:postgres@localhost:5432/postgres up; \
+	else \
+  	read -p "Go's 'goose' is not installed on your machine. Do you want to install it? [Y/n] " choice; \
+    if [ "$$choice" != "n" ] && [ "$$choice" != "N" ]; then \
+			go install github.com/pressly/goose/v3/cmd/goose@latest \
+    else \
+   		echo "You chose not to install goose. Exiting..."; \
+     	exit 1; \
+    fi; \
+	fi
+
 # Run the application
 run:
 	@go run cmd/api/main.go
