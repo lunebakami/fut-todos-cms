@@ -124,9 +124,9 @@ func (s *service) Close() error {
 func (s *service) InsertPost(p models.Post) (sql.Result, error) {
 	result, err := s.db.Exec(`
     INSERT INTO posts 
-    (title, content, user_id, created_at, updated_at)
-    VALUES ($1, $2, $3, $4, $5)`,
-		p.Title, p.Content, p.AuthorID, time.Now(), time.Now())
+    (title, content, user_id, image_url, created_at, updated_at)
+    VALUES ($1, $2, $3, $4, $5, $6)`,
+		p.Title, p.Content, p.AuthorID, p.ImageUrl, time.Now(), time.Now())
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +135,18 @@ func (s *service) InsertPost(p models.Post) (sql.Result, error) {
 }
 
 func (s *service) GetPosts() ([]models.Post, error) {
-	rows, err := s.db.Query(`SELECT * FROM posts`)
+	rows, err := s.db.Query(`
+    SELECT 
+      id, 
+      title, 
+      content, 
+      user_id, 
+      image_url, 
+      created_at, 
+      updated_at 
+    FROM posts
+  `)
+
 	if err != nil {
 		return nil, err
 	}
@@ -149,6 +160,7 @@ func (s *service) GetPosts() ([]models.Post, error) {
 			&post.Title,
 			&post.Content,
 			&post.AuthorID,
+			&post.ImageUrl,
 			&post.CreatedAt,
 			&post.UpdatedAt,
 		)
@@ -172,7 +184,7 @@ func (s *service) GetUsers() ([]models.User, error) {
 	users := []models.User{}
 
 	for rows.Next() {
-    var user models.User
+		var user models.User
 		err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
 		if err != nil {
 			log.Printf("Error scanning player: %e\n", err)
@@ -203,7 +215,7 @@ func (s *service) GetUserByEmail(email string) (models.User, error) {
 		&user.ID,
 		&user.Name,
 		&user.Email,
-    &user.Password,
+		&user.Password,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
