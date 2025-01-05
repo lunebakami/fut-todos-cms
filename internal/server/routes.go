@@ -21,6 +21,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 	postController := controllers.NewPostController(s.db)
 	userController := controllers.NewUserController(s.db)
 
+  e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+    AllowOrigins: []string{"*"},
+  }))
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
@@ -36,9 +39,11 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	r.GET("/posts", postController.GetPosts)
 	r.POST("/posts", postController.CreatePost)
+  r.DELETE("/posts/:id", postController.DeletePost)
 
 	r.GET("/users", userController.GetUsers)
 	r.POST("/users", userController.CreateUser)
+  r.DELETE("/users/:id", userController.DeleteUser)
 
 	return e
 }

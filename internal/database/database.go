@@ -26,8 +26,10 @@ type Service interface {
 
 	GetUsers() ([]models.User, error)
 	InsertUser(u models.User) (sql.Result, error)
+  DeleteUser(id string) (sql.Result, error)
 	GetPosts() ([]models.Post, error)
 	InsertPost(p models.Post) (sql.Result, error)
+  DeletePost(id string) (sql.Result, error)
 	GetUserByEmail(email string) (models.User, error)
 }
 
@@ -195,6 +197,15 @@ func (s *service) GetUsers() ([]models.User, error) {
 	return users, nil
 }
 
+func (s *service) DeletePost(id string) (sql.Result, error) {
+  result, err := s.db.Exec(`DELETE FROM posts WHERE id = $1`, id)
+  if err != nil {
+    return nil, err
+  }
+
+  return result, nil
+}
+
 func (s *service) InsertUser(u models.User) (sql.Result, error) {
 	result, err := s.db.Exec(`
     INSERT INTO users 
@@ -207,6 +218,15 @@ func (s *service) InsertUser(u models.User) (sql.Result, error) {
 	}
 
 	return result, nil
+}
+
+func (s *service) DeleteUser(id string) (sql.Result, error) {
+  result, err := s.db.Exec(`DELETE FROM users WHERE id = $1`, id)
+  if err != nil {
+    return nil, err
+  }
+
+  return result, nil
 }
 
 func (s *service) GetUserByEmail(email string) (models.User, error) {

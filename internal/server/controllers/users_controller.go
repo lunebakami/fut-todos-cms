@@ -13,6 +13,7 @@ import (
 type UserController interface {
 	CreateUser(c echo.Context) error
 	GetUsers(c echo.Context) error
+  DeleteUser(c echo.Context) error
 }
 
 type user_controller struct {
@@ -57,3 +58,13 @@ func (controller *user_controller) CreateUser(c echo.Context) error {
 }
 
 
+func (controller *user_controller) DeleteUser(c echo.Context) error {
+  id := c.Param("id")
+
+  result, err := controller.service.DeleteUser(id)
+  if err != nil {
+    return c.JSON(http.StatusInternalServerError, err)
+  }
+
+  return c.JSON(http.StatusOK, result)
+}
